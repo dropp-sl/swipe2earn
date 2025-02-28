@@ -7,6 +7,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './api/v1/user/user.module';
 import { AnnotationsModule } from './api/v1/annotations/annotations.module';
 import { PromptModule } from './api/v1/prompt/prompt.module';
+import { ImageModule } from './api/v1/image/image.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { PromptModule } from './api/v1/prompt/prompt.module';
     UserModule,
     AnnotationsModule,
     PromptModule,
+    ImageModule,
   ],
   controllers: [AppController],
   providers: [AppService],
