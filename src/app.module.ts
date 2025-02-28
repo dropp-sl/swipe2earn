@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './api/v1/user/user.module';
 import { AnnotationsModule } from './api/v1/annotations/annotations.module';
+import { PromptModule } from './api/v1/prompt/prompt.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AnnotationsModule } from './api/v1/annotations/annotations.module';
     }),
     UserModule,
     AnnotationsModule,
+    PromptModule,
   ],
   controllers: [AppController],
   providers: [AppService],
