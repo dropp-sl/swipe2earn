@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './api/v1/user/user.module';
+import { AnnotationsModule } from './api/v1/annotations/annotations.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { UserModule } from './api/v1/user/user.module';
       inject: [ConfigService],
     }),
     UserModule,
+    AnnotationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
