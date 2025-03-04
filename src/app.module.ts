@@ -6,8 +6,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './api/v1/user/user.module';
 import { AnnotationsModule } from './api/v1/annotations/annotations.module';
-import { PromptModule } from './api/v1/prompt/prompt.module';
-import { ImageModule } from './api/v1/image/image.module';
+import { DatabaseModule } from './database/database.module';
+import { ResponsesModule } from './api/v1/responses/responses.module';
+import { AchievementModule } from './api/v1/achievement/achievement.module';
+import { SendGridService } from './sendgrid/sendgrid.service';
+import { SwipeAnswersModule } from './api/v1/swipe-answers/swipe-answers.module';
+import { CategoryModule } from './api/v1/category/category.module';
 
 @Module({
   imports: [
@@ -24,12 +28,15 @@ import { ImageModule } from './api/v1/image/image.module';
       }),
       inject: [ConfigService],
     }),
+    DatabaseModule,
     UserModule,
     AnnotationsModule,
-    PromptModule,
-    ImageModule,
+    ResponsesModule,
+    AchievementModule,
+    SwipeAnswersModule,
+    CategoryModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, SendGridService],
 })
 export class AppModule {}

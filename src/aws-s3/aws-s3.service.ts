@@ -37,6 +37,16 @@ export class AwsS3Service {
     return this.deleteFile(key, 'images');
   }
 
+  async uploadGeneratedImage(file: Express.Multer.File): Promise<string> {
+    try {
+      await this.uploadFile(file, 'generated-images');
+      return `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.S3_BUCKET_REGION}.amazonaws.com/${file.filename}.png`;
+    } catch (error) {
+      console.error(ERROR_UPLOAD, error);
+      throw new HttpException(ERROR_UPLOAD, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   private async uploadFile(file: any, folder: string): Promise<string> {
     const fileKey = `${folder}/${uuidv4()}-${file?.originalname?.trim()}`;
 

@@ -20,7 +20,8 @@ export const CREDIENTIAL_NOT_VALID = 'Credientals are not valid';
 export const INVALID_PASSWORD = 'Incorrect Password';
 export const INVALID_CREDENTIALS = 'Incorrect Credentials';
 export const EMAIL_ALREADY_VERIFIED = 'Email is already verified.';
-export const EMAIL_NOT_VERIFIED = 'Email is not verified.';
+export const EMAIL_NOT_VERIFIED =
+  'Email is not verified. Please check your inbox';
 export const ONE_TIME_TOKEN_EXPIRED = 'One time token expired';
 export const OLD_PASSWORD_NOT_MATCH = 'Old password is incorrect';
 export const NEW_PASSWORD_SAME_AS_OLD =

@@ -15,7 +15,7 @@ export class User {
   @Prop({ required: true })
   password: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   phone: string;
 
   @Prop({ default: 0 })
@@ -29,6 +29,9 @@ export class User {
 
   @Prop({ default: UserStatus.INACTIVE, required: false })
   status?: string;
+
+  @Prop({ default: false })
+  isVerified: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

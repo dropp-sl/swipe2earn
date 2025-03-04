@@ -15,4 +15,8 @@ export class CreateAnnotationsDto {
 
   @IsOptional()
   metadata?: any;
+
+  @IsOptional()
+  @IsBoolean()
+  available?: boolean;
 }

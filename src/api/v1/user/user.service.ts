@@ -102,7 +102,7 @@ export class UserService {
     return this.userModel.findById(id).exec();
   }
 
-  async create(user: CreateUserDto): Promise<any> {
+  async create(user: any): Promise<any> {
     return this.userModel.create(user);
   }
 
