@@ -74,7 +74,7 @@ export class AnnotationsController {
       for (const [index, prompt] of ipPrompts.entries()) {
         try {
           console.log(`Processing IP Prompt ${index + 1}/${ipPrompts.length}`);
-          const imageUrl = await this.imageService.generateImage(prompt);
+          const imageUrl = await this.imageService.generateImageXL(prompt);
           const annotation: IAnnotation =
             await this.annotationsService.createAnnotation({
               prompt,
@@ -99,7 +99,7 @@ export class AnnotationsController {
           console.log(
             `Processing Non-IP Prompt ${index + 1}/${nonIpPrompts.length}`,
           );
-          const imageUrl = await this.imageService.generateImage(prompt);
+          const imageUrl = await this.imageService.generateImageXL(prompt);
           const annotation: IAnnotation =
             await this.annotationsService.createAnnotation({
               prompt,
@@ -141,7 +141,7 @@ export class AnnotationsController {
       for (const prompt of prompts.ipPrompts) {
         // Generate image using the prompt
         console.log('Received IP Prompt for Image Generation:', prompt);
-        const imageUrl = await this.imageService.generateImage(prompt);
+        const imageUrl = await this.imageService.generateImageXL(prompt);
         imageUrls.push(imageUrl);
         console.log('Generated Image URL:', imageUrl);
       }
@@ -149,7 +149,7 @@ export class AnnotationsController {
       for (const prompt of prompts.nonIpPrompts) {
         // Generate image using the prompt
         console.log('Received non-IP Prompt for Image Generation:', prompt);
-        const imageUrl = await this.imageService.generateImage(prompt);
+        const imageUrl = await this.imageService.generateImageXL(prompt);
         imageUrls.push(imageUrl);
         console.log('Generated Image URL:', imageUrl);
       }

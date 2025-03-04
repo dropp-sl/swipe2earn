@@ -68,8 +68,40 @@ export class ImageService {
   //   return uploadedImageUrl;
   // }
 
+  // 🔹 Function 1: Generates an image using Stable Diffusion v2
   async generateImage(prompt: string): Promise<string> {
-    console.log('Generating Image with Stable Diffusion for Prompt:', prompt);
+    return this.generateImageWithModel(
+      prompt,
+      'stabilityai/stable-diffusion-2',
+    );
+  }
+
+  // 🔹 Function 2: Generates an image using Stable Diffusion XL for higher quality
+  async generateImageXL(prompt: string): Promise<string> {
+    return this.generateImageWithModel(
+      prompt,
+      'stabilityai/stable-diffusion-xl-base-1.0',
+    );
+  }
+
+  // 🔹 Function 3: Generates an image with extra control settings (e.g., LoRA, ControlNet)
+  async generateImageControlled(
+    prompt: string,
+    controlParams: any,
+  ): Promise<string> {
+    return this.generateImageWithModel(
+      prompt,
+      'stabilityai/stable-diffusion-xl-base-1.0',
+      controlParams,
+    );
+  }
+
+  private async generateImageWithModel(
+    prompt: string,
+    model: string,
+    additionalParams = {},
+  ): Promise<string> {
+    console.log(`Generating Image with ${model} for Prompt:`, prompt);
 
     if (!EnvVariables.huggingfaceApiKey) {
       throw new Error('Missing Hugging Face API key.');
@@ -77,44 +109,40 @@ export class ImageService {
 
     try {
       const response = await axios.post(
-        'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2',
+        `https://api-inference.huggingface.co/models/${model}`,
         {
           inputs: prompt,
           parameters: {
             height: 1024,
             width: 1024,
-            guidance_scale: 7.5, // Controls adherence to prompt
-            num_inference_steps: 50, // More steps = better image quality
+            guidance_scale: 7.5,
+            num_inference_steps: 50,
+            ...additionalParams, // Additional parameters for control
           },
         },
         {
           headers: {
             Authorization: `Bearer ${EnvVariables.huggingfaceApiKey}`,
           },
-          responseType: 'arraybuffer', // Get raw image data
+          responseType: 'arraybuffer',
         },
       );
 
       if (!response.data) {
-        throw new Error('Hugging Face API did not return a valid image.');
+        throw new Error(
+          `Hugging Face API did not return a valid image for model ${model}.`,
+        );
       }
 
-      console.log(
-        `Generated image with Stable Diffusion for prompt: ${prompt}`,
-      );
-      console.log(response.data);
+      console.log(`Generated image using ${model} for prompt: ${prompt}`);
 
-      // Convert response to buffer
       const imageBuffer = Buffer.from(response.data, 'binary');
-
-      // Create a mock file-like object for upload
       const fileName = `${Date.now()}_generated.png`;
       const file = {
         buffer: imageBuffer,
         mimetype: 'image/png',
       } as Express.Multer.File;
 
-      // Upload to OCI
       console.log('Uploading image to OCI Storage...');
       const uploadedImageUrl = await this.ociStorageService.upload(
         fileName,
@@ -124,8 +152,8 @@ export class ImageService {
 
       return uploadedImageUrl;
     } catch (error) {
-      console.error('Error generating image:', error.message);
-      throw new Error('Failed to generate image using Stable Diffusion.');
+      console.error(`Error generating image with ${model}:`, error.message);
+      throw new Error(`Failed to generate image using ${model}.`);
     }
   }
 
