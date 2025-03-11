@@ -1,18 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Prompt, PromptDocument } from './schema/prompt.schema';
-import { Model } from 'mongoose';
-import { CreatePromptDto } from './dto/prompt.dto';
 import OpenAI from 'openai';
+import { CategoryService } from '../../category/category.service';
+import { ICategory } from '../../category/interface/category.interface';
 
 @Injectable()
 export class PromptService {
   private openai: OpenAI;
 
-  constructor(
-    @InjectModel(Prompt.name)
-    private readonly promptModel: Model<PromptDocument>,
-  ) {
+  constructor(private readonly categoryService: CategoryService) {
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
@@ -42,27 +37,40 @@ export class PromptService {
     return prompt;
   }
 
-  async create(promptData: CreatePromptDto): Promise<any> {
-    return this.promptModel.create(promptData);
-  }
-
   async batchPrompts(
     batchSize: number,
   ): Promise<{ ipPrompts: string[]; nonIpPrompts: string[] }> {
     const ipPrompts: string[] = [];
     const nonIpPrompts: string[] = [];
+    const categories: ICategory[] =
+      await this.categoryService.getAllCategories();
+
+    if (!categories || categories.length === 0) {
+      throw new Error('No categories available for prompt generation.');
+    }
+
+    let categoryIndex = 0;
 
     for (let i = 0; i < batchSize / 2; i++) {
+      const category = categories[categoryIndex];
+
       ipPrompts.push(
         await this.generatePrompt(
-          `Generate a unique, creative text prompt for an AI-generated image that includes references to well-known brands, fictional characters, or copyrighted elements without explicitly naming them. Avoid using direct brand names or copyrighted material.`,
+          `Generate a unique, creative but logic text prompt in one sentence for an AI-generated image related to the category "${category.name}". 
+        This image should include elements inspired by well-known brands, fictional characters, or copyrighted concepts. Explicitly mention the category at least once.`,
         ),
       );
+
       nonIpPrompts.push(
         await this.generatePrompt(
-          `Generate a unique, creative text prompt for an AI-generated image that strictly avoids references to any brand, fictional character, or copyrighted elements. Focus on generic themes, nature, landscapes, abstract art, and original concepts.`,
+          `Generate a unique, creative but logic text prompt in one sentence for an AI-generated image related to the category "${category.name}". 
+        This image should **strictly** avoid references to any brand, fictional character, or copyrighted elements. 
+        Focus on generic themes, nature, landscapes, abstract art, and original designs. Explicitly mention the category at least once.`,
         ),
       );
+
+      // Move to the next category in a round-robin manner
+      categoryIndex = (categoryIndex + 1) % categories.length;
     }
 
     return { ipPrompts, nonIpPrompts };

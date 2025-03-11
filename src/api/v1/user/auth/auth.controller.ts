@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   HttpException,
   HttpStatus,
   Post,
@@ -27,6 +28,7 @@ import {
   USER_ACCOUNT_NOT_FOUND,
   USER_ACCOUNT_STATUS_INACTIVE,
   USER_ALREADY_EXIST_WITH_EMAIL,
+  USERNAME_ALREADY_TAKEN,
 } from 'src/constants/error.contant';
 import * as bcrypt from 'bcrypt';
 import { UserStatus } from 'src/utils/enum';
@@ -86,13 +88,22 @@ export class AuthController {
   @Post('register')
   async register(@Body() registerUserDto: RegisterDto) {
     return await handleErrorException(async () => {
-      const exists = await this.userService.findByEmail(registerUserDto.email);
+      const emailExists = await this.userService.findByEmail(
+        registerUserDto.email,
+      );
 
-      if (exists)
+      if (emailExists)
         throw new HttpException(
           USER_ALREADY_EXIST_WITH_EMAIL,
           HttpStatus.BAD_REQUEST,
         );
+
+      const usernameExists = await this.userService.findByUsername(
+        registerUserDto.username,
+      );
+
+      if (usernameExists)
+        throw new HttpException(USERNAME_ALREADY_TAKEN, HttpStatus.BAD_REQUEST);
 
       const salt = await bcrypt.genSalt(10);
       const hashPassword = await bcrypt.hash(registerUserDto.password, salt);
@@ -120,9 +131,14 @@ export class AuthController {
   }
 
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   async login(@Body() body: LoginUserDto): Promise<any> {
     return await handleErrorException(async () => {
-      const user: IUser = await this.userService.findByEmail(body.email);
+      let user: IUser;
+
+      if (body?.email) user = await this.userService.findByEmail(body.email);
+      else if (body?.username)
+        user = await this.userService.findByUsername(body.username);
 
       if (!user)
         throw new HttpException(USER_ACCOUNT_NOT_FOUND, HttpStatus.BAD_REQUEST);

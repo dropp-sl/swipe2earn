@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Annotations, AnnotationsDocument } from './schema/annotations.schema';
-import { FilterQuery, Model, UpdateQuery } from 'mongoose';
+import { FilterQuery, Model, Types, UpdateQuery } from 'mongoose';
 import { CreateAnnotationsDto } from './dto/annotations.dto';
 import OpenAI from 'openai';
 
@@ -14,8 +14,21 @@ export class AnnotationsService {
     private readonly annotationsModel: Model<AnnotationsDocument>,
   ) {
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY, // Ensure this is set in .env
+      apiKey: process.env.OPENAI_API_KEY,
     });
+  }
+
+  async findOneRandom(userId: string): Promise<any> {
+    return this.annotationsModel
+      .aggregate([
+        {
+          $match: {
+            userIds: { $nin: [new Types.ObjectId(userId)] },
+          },
+        },
+        { $sample: { size: 1 } },
+      ])
+      .exec();
   }
 
   async generateAnnotation(): Promise<any> {
@@ -59,7 +72,7 @@ export class AnnotationsService {
     data: UpdateQuery<AnnotationsDocument>,
   ): Promise<any> {
     return await this.annotationsModel
-      .findByIdAndUpdate(filter, data, { new: true })
+      .updateOne(filter, data, { new: true })
       .exec();
   }
 

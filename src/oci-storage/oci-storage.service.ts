@@ -6,18 +6,11 @@ import {
   responses,
   UploadManager,
 } from 'oci-objectstorage';
-import {
-  ConfigFileReader,
-  Region,
-  SimpleAuthenticationDetailsProvider,
-} from 'oci-common';
+import { Region, SimpleAuthenticationDetailsProvider } from 'oci-common';
 import { v4 as uuidv4 } from 'uuid';
 import { ERROR_DELETE, ERROR_UPLOAD } from 'src/constants/error.contant';
 import { UploadRequest } from 'oci-objectstorage/lib/upload-manager/upload-request';
-import {
-  Content,
-  RequestDetails,
-} from 'oci-objectstorage/lib/upload-manager/types';
+import { Content } from 'oci-objectstorage/lib/upload-manager/types';
 import { Readable } from 'stream';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -35,10 +28,15 @@ export class OciStorageService {
   private commonArgs: CommonOciRequestArgs;
   private readonly namespace: string;
   private readonly bucketName: string;
+  private readonly preAuthBaseUrl: string;
 
   constructor() {
     // Logging the initialization of the service
     console.log('Initializing OCI Object Storage Service...');
+    this.namespace = EnvVariables.oci.namespace;
+    this.bucketName = EnvVariables.oci.bucketName;
+    this.preAuthBaseUrl = EnvVariables.oci.preAuthBaseUrl;
+
     // Setting up OCI authentication using credentials from environment variables
     const provider = new SimpleAuthenticationDetailsProvider(
       EnvVariables.oci.tenancyId,
@@ -108,54 +106,48 @@ export class OciStorageService {
         requestDetails: {
           namespaceName: EnvVariables.oci.namespace,
           bucketName: EnvVariables.oci.bucketName,
-          objectName: fileName,
+          objectName: `generated-images/${fileName}`,
         },
       });
       console.log(fileName);
-      return `https://objectstorage.${EnvVariables.oci.region}.oraclecloud.com/n/${EnvVariables.oci.namespace}/b/${EnvVariables.oci.bucketName}/o/${fileName}`;
+      return `${this.preAuthBaseUrl}${fileName}`;
     } catch (ex) {
       console.error(`Failed due to ${ex}`);
     }
   }
 
   async uploadFile(file: Express.Multer.File, folder: string): Promise<string> {
-    const filePath = `${folder}/${uuidv4()}-${file?.originalname?.trim()}`;
+    // ✅ Generate a unique filename
+    const fileName = `${uuidv4()}-${file.originalname.trim()}`;
+    const objectPath = `${folder}/${fileName}`; // OCI Object Key
 
-    const directoryPath = path.dirname(filePath);
-
-    // Ensure the directory exists before writing the file
-    if (!fs.existsSync(directoryPath)) {
-      fs.mkdirSync(directoryPath, { recursive: true });
+    // ✅ Ensure namespace and bucket are defined
+    if (!this.namespace || !this.bucketName) {
+      throw new Error('OCI Namespace or Bucket Name is not defined.');
     }
 
-    fs.writeFileSync(filePath, file.buffer);
-
-    // Define `Content` as required by OCI SDK
-    const content: Content = {
-      stream: fs.createReadStream(filePath) as Readable, // ✅ Ensuring correct BinaryBody type
-    };
-
-    // Define `RequestDetails` for OCI UploadManager
+    // ✅ Define the UploadRequest
     const uploadRequest: UploadRequest = {
       requestDetails: {
-        namespaceName: this.namespace, // ✅ Ensure this exists
+        namespaceName: this.namespace,
         bucketName: this.bucketName,
-        objectName: filePath,
+        objectName: objectPath, // ✅ Use objectPath, not filePath
         contentType: file.mimetype,
       },
       content: {
-        stream: fs.createReadStream(filePath),
+        blob: new Blob([file.buffer], { type: file.mimetype }),
       },
       singleUpload: true,
     };
 
     try {
+      // ✅ Upload to OCI Storage
       const uploadResponse = await this.uploadManager.upload(uploadRequest);
-      fs.unlinkSync(filePath); // ✅ Clean up temp file
 
       console.log('Upload response:', uploadResponse);
 
-      return `https://${this.namespace}.objectstorage.${process.env.OCI_REGION}.oraclecloud.com/n/${this.namespace}/b/${this.bucketName}/o/${filePath}`;
+      // ✅ Return the correct Pre-Authenticated URL
+      return `${this.preAuthBaseUrl}/${objectPath}`;
     } catch (error) {
       console.error(ERROR_UPLOAD, error);
       throw new HttpException(ERROR_UPLOAD, HttpStatus.INTERNAL_SERVER_ERROR);

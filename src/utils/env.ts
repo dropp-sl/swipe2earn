@@ -15,6 +15,7 @@ type RootConfig = {
     region: string;
     bucketName: string;
     namespace: string;
+    preAuthBaseUrl: string;
   };
   huggingfaceApiKey: string;
 };
@@ -32,6 +33,7 @@ const EnvVariables: RootConfig = {
     region: process.env.OCI_REGION,
     bucketName: process.env.OCI_BUCKET_NAME,
     namespace: process.env.OCI_NAMESPACE,
+    preAuthBaseUrl: process.env.OCI_PRE_AUTH_URL,
   },
   storagePlatform: process.env.STORAGE_PLATFORM,
   huggingfaceApiKey: process.env.HUGGINGFACE_API_KEY,

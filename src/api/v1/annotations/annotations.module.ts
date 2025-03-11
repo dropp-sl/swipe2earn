@@ -5,6 +5,7 @@ import { DatabaseModule } from 'src/database/database.module';
 import { PromptService } from './prompt/prompt.service';
 import { ImageService } from './image/image.service';
 import { OciStorageService } from 'src/oci-storage/oci-storage.service';
+import { CategoryService } from '../category/category.service';
 
 @Module({
   imports: [DatabaseModule],
@@ -13,6 +14,7 @@ import { OciStorageService } from 'src/oci-storage/oci-storage.service';
     OciStorageService,
     PromptService,
     ImageService,
+    CategoryService,
   ],
   controllers: [AnnotationsController],
 })

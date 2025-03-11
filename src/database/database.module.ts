@@ -6,14 +6,6 @@ import {
   AchievementSchema,
 } from 'src/api/v1/achievement/schema/achievement.schema';
 import {
-  Image,
-  ImageSchema,
-} from 'src/api/v1/annotations/image/schema/image.schema';
-import {
-  Prompt,
-  PromptSchema,
-} from 'src/api/v1/annotations/prompt/schema/prompt.schema';
-import {
   Annotations,
   AnnotationsSchema,
 } from 'src/api/v1/annotations/schema/annotations.schema';
@@ -38,8 +30,6 @@ import { User, UserSchema } from 'src/api/v1/user/schema/user.schema';
 const mongooseModels: Array<ModelDefinition> = [
   { name: User.name, schema: UserSchema },
   { name: Annotations.name, schema: AnnotationsSchema },
-  { name: Prompt.name, schema: PromptSchema },
-  { name: Image.name, schema: ImageSchema },
   { name: Response.name, schema: ResponseSchema },
   { name: Achievement.name, schema: AchievementSchema },
   { name: PlayerCard.name, schema: PlayerCardSchema },

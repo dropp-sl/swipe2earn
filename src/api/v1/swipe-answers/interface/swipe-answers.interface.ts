@@ -8,7 +8,7 @@ export interface IMetadata {
     height: number;
   };
   label: string;
-  category: string; // Reference to Category ID
+  categories: string[]; // Reference to Category ID
 }
 
 export interface ISwipeAnswer extends Document {

@@ -21,7 +21,7 @@ export class SendGridService {
             dynamic_template_data: {
               subject: 'Verify Your Email ✔',
               button_url: `${process.env.CLIENT_URL}verify-email/${token}`,
-              name: user?.name,
+              name: user?.username,
             },
           },
         ],
@@ -69,7 +69,7 @@ export class SendGridService {
           dynamic_template_data: {
             subject: 'Forgot Password ✔',
             button_url: `${process.env.CLIENT_URL}reset-new-password/${token}`,
-            name: user?.name,
+            name: user?.username,
           },
         },
       ],
@@ -89,7 +89,7 @@ export class SendGridService {
             to: { email: `${user?.email}` },
             dynamic_template_data: {
               subject: 'Account Deactivation Requested',
-              name: user?.name,
+              name: user?.username,
               link: `${process.env.CLIENT_URL}sign-in`,
             },
           },
@@ -111,7 +111,7 @@ export class SendGridService {
             to: { email: `${user?.email}` },
             dynamic_template_data: {
               subject: 'Account Permanently Deactivated!',
-              name: user?.name,
+              name: user?.username,
             },
           },
         ],
@@ -132,7 +132,7 @@ export class SendGridService {
             to: { email: `${user?.email}` },
             dynamic_template_data: {
               subject: 'Account Permanently Deactivated!',
-              name: user?.name,
+              name: user?.username,
             },
           },
         ],
@@ -153,7 +153,7 @@ export class SendGridService {
             to: { email: `${user?.email}` },
             dynamic_template_data: {
               subject: 'Re-activate your account!',
-              name: user?.name,
+              name: user?.username,
               link: `${process.env.CLIENT_URL}/sign-in`,
             },
           },

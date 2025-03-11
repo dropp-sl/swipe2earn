@@ -22,6 +22,7 @@ import { ICategory } from '../category/interface/category.interface';
 import { ISwipeAnswer } from './interface/swipe-answers.interface';
 import { IPlayerCard } from '../user/interface/player-card.interface';
 import { Types } from 'mongoose';
+import { IAnnotation } from '../annotations/interface/annotations.interface';
 
 @UseGuards(AuthGuard)
 @Controller('swipe-answers')
@@ -56,7 +57,7 @@ export class SwipeAnswersController {
   ) {
     return await handleErrorException(async () => {
       try {
-        const annotation = await this.annotationsService.findOne({
+        const annotation: IAnnotation = await this.annotationsService.findOne({
           _id: data.annotationsId,
         });
 
@@ -66,16 +67,17 @@ export class SwipeAnswersController {
             HttpStatus.BAD_REQUEST,
           );
 
-        for (const meta of data.metadata) {
-          const categoryExists: ICategory =
-            await this.categoryService.findCategoryById(meta.category);
+        for (const meta of data.metadata)
+          for (const category of meta.categories) {
+            const categoryExists: ICategory =
+              await this.categoryService.findCategoryById(category);
 
-          if (!categoryExists)
-            return {
-              status: HttpStatus.BAD_REQUEST,
-              error: `Category ID ${meta.category} does not exist. Please select an existing category or create a new one.`,
-            };
-        }
+            if (!categoryExists)
+              return {
+                status: HttpStatus.BAD_REQUEST,
+                error: `Category ID ${category} does not exist. Please select an existing category or create a new one.`,
+              };
+          }
 
         const userMongoId = new Types.ObjectId(req?.user?.userInfo?.userId);
         const isCorrect = annotation.ipExists === data.answer;
@@ -111,7 +113,7 @@ export class SwipeAnswersController {
         const updateAnnotation = await this.annotationsService.update(
           { _id: data.annotationsId },
           {
-            $push: { userIds: req?.user?.userInfo?.userId },
+            $push: { userIds: new Types.ObjectId(req?.user?.userInfo?.userId) },
             available: annotationAnswersCount < 100,
           },
         );

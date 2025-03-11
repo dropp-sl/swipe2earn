@@ -20,3 +20,24 @@ export class CreateAnnotationsDto {
   @IsBoolean()
   available?: boolean;
 }
+
+export class UpdateAnnotationsDto {
+  @IsOptional()
+  @IsString()
+  prompt?: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  ipExists?: boolean;
+
+  @IsOptional()
+  metadata?: any;
+
+  @IsOptional()
+  @IsBoolean()
+  available?: boolean;
+}

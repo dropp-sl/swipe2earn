@@ -5,7 +5,10 @@ import {
   HttpException,
   HttpStatus,
   Post,
+  Put,
   Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { AnnotationsService } from './annotations.service';
 import { CreateAnnotationsDto } from './dto/annotations.dto';
@@ -15,6 +18,9 @@ import { PromptService } from './prompt/prompt.service';
 import { ImageService } from './image/image.service';
 import { SOMETHING_WENT_WRONG_TRY_AGAIN } from 'src/constants/error.contant';
 import { IAnnotation } from './interface/annotations.interface';
+import { RequestWithUser } from 'src/interfaces/request-user';
+import { Types } from 'mongoose';
+import { AuthGuard } from 'src/guards/auth.guard';
 
 @Controller('annotations')
 export class AnnotationsController {
@@ -24,7 +30,17 @@ export class AnnotationsController {
     private readonly imageService: ImageService,
   ) {}
 
-  @Get()
+  @UseGuards(AuthGuard)
+  @Get('one')
+  async getOneRandom(@Req() req: RequestWithUser) {
+    return await handleErrorException(async () => {
+      const annotation: IAnnotation =
+        await this.annotationsService.findOneRandom(req.user.userInfo.userId);
+      return ResponseHelper.CreateResponse(annotation, HttpStatus.OK);
+    });
+  }
+
+  @Get('all')
   async findAll(@Query('page') page = 0, @Query('limit') limit = 10) {
     return await handleErrorException(async () => {
       const generations = await this.annotationsService.findAll(page, limit);
@@ -48,14 +64,37 @@ export class AnnotationsController {
     });
   }
 
-  @Post('generate')
+  @Put('update')
+  async update(@Body() id: string, @Req() req: RequestWithUser) {
+    return await handleErrorException(async () => {
+      const result: IAnnotation = await this.annotationsService.update(
+        {
+          _id: id,
+          userIds: { $nin: [new Types.ObjectId(req?.user?.userInfo?.userId)] },
+        },
+        {
+          $push: { userIds: new Types.ObjectId(req?.user?.userInfo?.userId) },
+        },
+      );
+
+      if (!result)
+        throw new HttpException(
+          SOMETHING_WENT_WRONG_TRY_AGAIN,
+          HttpStatus.BAD_REQUEST,
+        );
+
+      return ResponseHelper.CreateResponse(result, HttpStatus.OK);
+    });
+  }
+
+  @Get('generate')
   async generateAnnotations(): Promise<{
     message: string;
     totalGenerated: number;
     failedCount: number;
   }> {
     return await handleErrorException(async () => {
-      const batchSize = 10; // 10 IP + 10 Non-IP
+      const batchSize = 50; // 10 IP + 10 Non-IP
       let successCount = 0;
       let failedCount = 0;
 
@@ -74,7 +113,8 @@ export class AnnotationsController {
       for (const [index, prompt] of ipPrompts.entries()) {
         try {
           console.log(`Processing IP Prompt ${index + 1}/${ipPrompts.length}`);
-          const imageUrl = await this.imageService.generateImageXL(prompt);
+          const imageUrl =
+            await this.imageService.generateImageWithOpenAI(prompt);
           const annotation: IAnnotation =
             await this.annotationsService.createAnnotation({
               prompt,
@@ -99,7 +139,8 @@ export class AnnotationsController {
           console.log(
             `Processing Non-IP Prompt ${index + 1}/${nonIpPrompts.length}`,
           );
-          const imageUrl = await this.imageService.generateImageXL(prompt);
+          const imageUrl =
+            await this.imageService.generateImageWithOpenAI(prompt);
           const annotation: IAnnotation =
             await this.annotationsService.createAnnotation({
               prompt,
@@ -127,38 +168,6 @@ export class AnnotationsController {
         totalGenerated: successCount,
         failedCount: failedCount,
       };
-    });
-  }
-
-  @Post('/test-generation')
-  async testGeneration() {
-    return await handleErrorException(async () => {
-      // Generate prompt
-      const prompts = await this.promptService.batchPrompts(2);
-      console.log('Generated Prompt:', prompts);
-
-      let imageUrls: string[] = [];
-      for (const prompt of prompts.ipPrompts) {
-        // Generate image using the prompt
-        console.log('Received IP Prompt for Image Generation:', prompt);
-        const imageUrl = await this.imageService.generateImageXL(prompt);
-        imageUrls.push(imageUrl);
-        console.log('Generated Image URL:', imageUrl);
-      }
-
-      for (const prompt of prompts.nonIpPrompts) {
-        // Generate image using the prompt
-        console.log('Received non-IP Prompt for Image Generation:', prompt);
-        const imageUrl = await this.imageService.generateImageXL(prompt);
-        imageUrls.push(imageUrl);
-        console.log('Generated Image URL:', imageUrl);
-      }
-
-      // Return both
-      return ResponseHelper.CreateResponse(
-        { prompts, imageUrls },
-        HttpStatus.OK,
-      );
     });
   }
 }

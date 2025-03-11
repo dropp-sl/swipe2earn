@@ -12,6 +12,7 @@ export const USER_ALREADY_DELETED = 'Account is already deleted.';
 // User related errors
 export const USER_ALREADY_EXIST_WITH_EMAIL =
   'This email is already in use try with different email';
+export const USERNAME_ALREADY_TAKEN = 'Username is already taken';
 export const USER_NOT_FOUND = 'User not found';
 export const NAME_LENGTH_SHORT = 'Name must be at least 2 characters long';
 

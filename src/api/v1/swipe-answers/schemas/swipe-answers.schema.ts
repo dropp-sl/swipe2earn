@@ -9,8 +9,8 @@ export class Metadata {
   @Prop({ required: true })
   label: string;
 
-  @Prop({ required: true, type: mongoose.Types.ObjectId, ref: 'Category' })
-  category: string;
+  @Prop({ required: true, type: [mongoose.Types.ObjectId], ref: 'Category' })
+  categories: string[];
 }
 
 @Schema({

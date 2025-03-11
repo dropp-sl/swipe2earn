@@ -146,4 +146,8 @@ export class UserService {
   async findByEmail(email: string): Promise<any> {
     return this.userModel.findOne({ email }).exec();
   }
+
+  async findByUsername(username: string): Promise<any> {
+    return this.userModel.findOne({ username }).exec();
+  }
 }

@@ -3,7 +3,7 @@ import { Platforms } from 'src/utils/enum';
 
 export interface IUser extends Document {
   _id: string | Types.ObjectId;
-  name: string;
+  username: string;
   email: string;
   password: string;
   phone: string;

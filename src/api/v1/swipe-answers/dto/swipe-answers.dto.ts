@@ -10,7 +10,6 @@ import {
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { Coordinates } from 'src/utils/types';
-import { CreateUserDto } from '../../user/dto/user.dto';
 
 export class metadata {
   @IsNotEmpty()
@@ -21,8 +20,8 @@ export class metadata {
   label: string;
 
   @IsNotEmpty()
-  @IsMongoId()
-  category: string;
+  @IsArray()
+  categories: string[];
 }
 
 export class SubmitSwipeAnswerDto {
