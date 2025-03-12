@@ -119,7 +119,7 @@ export class AnnotationsController {
             await this.annotationsService.createAnnotation({
               prompt,
               imageUrl,
-              ipExists: false,
+              ipExists: true,
               available: true,
             });
           generatedAnnotations.push(annotation);

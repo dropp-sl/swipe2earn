@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  Param,
   Post,
   Query,
 } from '@nestjs/common';
@@ -52,8 +53,8 @@ export class AuthController {
     private readonly playerCardService: PlayerCardService,
   ) {}
 
-  @Get('verify-email')
-  async verifyEmail(@Query('token') token: string) {
+  @Get('verify-email/:token')
+  async verifyEmail(@Param('token') token: string) {
     return await handleErrorException(async () => {
       const userInfo =
         await this.jwtTokenService.decryptVerifyEmailToken(token);

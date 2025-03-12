@@ -166,7 +166,12 @@ export class SendGridService {
   }
 
   async send(mail: any) {
-    const transport = await SendGrid.send(mail);
-    return transport;
+    try {
+      const transport = await SendGrid.send(mail);
+      return transport;
+    } catch (error) {
+      console.log('Error sending email', error);
+      return null;
+    }
   }
 }
