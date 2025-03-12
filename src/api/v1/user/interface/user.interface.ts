@@ -7,9 +7,6 @@ export interface IUser extends Document {
   email: string;
   password: string;
   phone: string;
-  points: number;
-  level: number;
-  dgn: number;
   status: string;
   isVerified: boolean;
   picture?: string;

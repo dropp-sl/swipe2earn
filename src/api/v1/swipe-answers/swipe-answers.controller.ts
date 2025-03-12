@@ -67,17 +67,18 @@ export class SwipeAnswersController {
             HttpStatus.BAD_REQUEST,
           );
 
-        for (const meta of data.metadata)
-          for (const category of meta.categories) {
-            const categoryExists: ICategory =
-              await this.categoryService.findCategoryById(category);
+        if (data.metadata && data.metadata.length > 0)
+          for (const meta of data.metadata)
+            for (const category of meta.categories) {
+              const categoryExists: ICategory =
+                await this.categoryService.findCategoryById(category);
 
-            if (!categoryExists)
-              return {
-                status: HttpStatus.BAD_REQUEST,
-                error: `Category ID ${category} does not exist. Please select an existing category or create a new one.`,
-              };
-          }
+              if (!categoryExists)
+                return {
+                  status: HttpStatus.BAD_REQUEST,
+                  error: `Category ID ${category} does not exist. Please select an existing category or create a new one.`,
+                };
+            }
 
         const userMongoId = new Types.ObjectId(req?.user?.userInfo?.userId);
         const isCorrect = annotation.ipExists === data.answer;
@@ -132,7 +133,7 @@ export class SwipeAnswersController {
               userPlayCard,
             },
             HttpStatus.OK,
-            `Answer submitted, but no metadata needed since it's incorrect.`,
+            `Answer submitted, but no metadata needed since it is incorrect.`,
           );
 
         userPlayCard = await this.playerCardService.updateCardById(
@@ -140,7 +141,9 @@ export class SwipeAnswersController {
             userId: userMongoId,
           },
           {
-            points: userPlayCard.points + 500,
+            totalPoints: userPlayCard.totalPoints + 500,
+            swipePoints: userPlayCard.swipePoints + 500,
+            xp: userPlayCard.xp + 10,
           },
         );
 
@@ -154,7 +157,7 @@ export class SwipeAnswersController {
           {
             isCorrect,
             swipeAnswer: newSwipeAnswer,
-            userPlayCard,
+            card: userPlayCard,
           },
           HttpStatus.OK,
           'Answer submitted successfully.',

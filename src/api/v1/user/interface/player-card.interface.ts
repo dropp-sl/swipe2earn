@@ -8,7 +8,8 @@ export interface IStreak {
 
 export interface IPlayerCard extends Document {
   userId: Types.ObjectId;
-  points: number;
+  totalPoints: number;
+  swipePoints: number;
   xp: number;
   level: number;
   rank: string;

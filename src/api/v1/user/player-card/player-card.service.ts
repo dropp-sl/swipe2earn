@@ -52,7 +52,8 @@ export class PlayerCardService {
       });
     }
 
-    card.points += pointsEarned;
+    card.totalPoints += pointsEarned;
+    card.swipePoints += pointsEarned;
     card.xp += this.calculateXp(pointsEarned);
     this.handleLevelUpdate(card);
     this.updateDailyStreak(card);

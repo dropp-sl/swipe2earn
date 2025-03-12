@@ -18,15 +18,6 @@ export class User {
   @Prop({ required: false })
   phone: string;
 
-  @Prop({ default: 0 })
-  points: number;
-
-  @Prop({ default: 1 })
-  level: number;
-
-  @Prop({ default: 0 })
-  dgn: number;
-
   @Prop({ default: UserStatus.INACTIVE, required: false })
   status?: string;
 

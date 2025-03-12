@@ -15,7 +15,10 @@ export class PlayerCard {
   userId: Types.ObjectId;
 
   @Prop({ default: 0 })
-  points: number;
+  totalPoints: number;
+
+  @Prop({ default: 0 })
+  swipePoints: number;
 
   @Prop({ default: 0 })
   xp: number;
