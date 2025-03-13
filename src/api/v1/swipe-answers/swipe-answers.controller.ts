@@ -56,119 +56,125 @@ export class SwipeAnswersController {
     @Req() req: RequestWithUser,
   ) {
     return await handleErrorException(async () => {
-      try {
-        const annotation: IAnnotation = await this.annotationsService.findOne({
-          _id: data.annotationsId,
-        });
+      const annotation: IAnnotation = await this.annotationsService.findOne({
+        _id: data.annotationsId,
+      });
 
-        if (!annotation)
-          throw new HttpException(
-            'Annotation not found',
-            HttpStatus.BAD_REQUEST,
-          );
+      if (!annotation)
+        throw new HttpException('Annotation not found', HttpStatus.BAD_REQUEST);
 
-        if (data.metadata && data.metadata.length > 0)
-          for (const meta of data.metadata)
-            for (const category of meta.categories) {
-              const categoryExists: ICategory =
-                await this.categoryService.findCategoryById(category);
-
-              if (!categoryExists)
-                return {
-                  status: HttpStatus.BAD_REQUEST,
-                  error: `Category ID ${category} does not exist. Please select an existing category or create a new one.`,
-                };
-            }
-
-        const userMongoId = new Types.ObjectId(req?.user?.userInfo?.userId);
-        const isCorrect = annotation.ipExists === data.answer;
-
-        if (isCorrect && data.answer)
-          if (!data.metadata || data.metadata.length === 0)
+      if (data.metadata && data.metadata.length > 0)
+        for (const meta of data.metadata) {
+          if (!meta.label?.trim())
             throw new HttpException(
-              'Annotation(s) is required for correct answers',
+              `Bounding box annotation is missing a label. Please provide a valid label.`,
               HttpStatus.BAD_REQUEST,
             );
 
-        let userPlayCard: IPlayerCard =
-          await this.playerCardService.getPlayerByUserId(
-            req?.user?.userInfo?.userId,
-          );
+          for (const category of meta.categories) {
+            const categoryExists: ICategory =
+              await this.categoryService.findCategoryById(category);
 
-        if (!userPlayCard)
-          userPlayCard = await this.playerCardService.createPlayerCard(
-            req?.user?.userInfo?.userId,
-          );
+            if (!categoryExists) {
+              return {
+                status: HttpStatus.BAD_REQUEST,
+                error: `Category ID ${category} does not exist. Please select an existing category or create a new one.`,
+              };
+            }
+          }
+        }
 
-        const annotationAnswersCount = await this.swipeAnswersService.count({
-          annotationsId: data.annotationsId,
+      const userMongoId = new Types.ObjectId(req?.user?.userInfo?.userId);
+      const isCorrect = annotation.ipExists === data.answer;
+
+      if (
+        isCorrect &&
+        data.answer &&
+        (!data.metadata || data.metadata.length === 0)
+      )
+        throw new HttpException(
+          'Annotations are required for correct answers. Please add at least one bounding box.',
+          HttpStatus.BAD_REQUEST,
+        );
+
+      if (!isCorrect && data.answer) data.answer = false;
+
+      let userPlayCard: IPlayerCard =
+        await this.playerCardService.getPlayerByUserId(
+          req?.user?.userInfo?.userId,
+        );
+
+      if (!userPlayCard) {
+        userPlayCard = await this.playerCardService.createPlayerCard(
+          req?.user?.userInfo?.userId,
+        );
+      }
+
+      const annotationAnswersCount = await this.swipeAnswersService.count({
+        annotationsId: data.annotationsId,
+      });
+
+      const newSwipeAnswer: ISwipeAnswer =
+        await this.swipeAnswersService.createSwipeAnswers({
+          ...data,
+          points: isCorrect ? 500 : 0,
+          userId: userMongoId,
         });
 
-        const newSwipeAnswer: ISwipeAnswer =
-          await this.swipeAnswersService.createSwipeAnswers({
-            ...data,
-            points: isCorrect ? 500 : 0,
-            userId: userMongoId,
-          });
+      const updateAnnotation = await this.annotationsService.update(
+        { _id: data.annotationsId },
+        {
+          $push: { userIds: new Types.ObjectId(req?.user?.userInfo?.userId) },
+          available: annotationAnswersCount < 100,
+        },
+      );
 
-        const updateAnnotation = await this.annotationsService.update(
-          { _id: data.annotationsId },
-          {
-            $push: { userIds: new Types.ObjectId(req?.user?.userInfo?.userId) },
-            available: annotationAnswersCount < 100,
-          },
+      if (!updateAnnotation) {
+        throw new HttpException(
+          SOMETHING_WENT_WRONG_TRY_AGAIN,
+          HttpStatus.BAD_REQUEST,
         );
+      }
 
-        if (!updateAnnotation)
-          throw new HttpException(
-            SOMETHING_WENT_WRONG_TRY_AGAIN,
-            HttpStatus.BAD_REQUEST,
-          );
-
-        if (!isCorrect)
-          return ResponseHelper.CreateResponse(
-            {
-              isCorrect: false,
-              swipeAnswer: newSwipeAnswer,
-              userPlayCard,
-            },
-            HttpStatus.OK,
-            `Answer submitted, but no metadata needed since it is incorrect.`,
-          );
-
-        userPlayCard = await this.playerCardService.updateCardById(
-          {
-            userId: userMongoId,
-          },
-          {
-            totalPoints: userPlayCard.totalPoints + 500,
-            swipePoints: userPlayCard.swipePoints + 500,
-            xp: userPlayCard.xp + 10,
-          },
-        );
-
-        if (!newSwipeAnswer)
-          throw new HttpException(
-            'Failed to submit answer',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-          );
-
+      if (!isCorrect) {
         return ResponseHelper.CreateResponse(
           {
-            isCorrect,
+            isCorrect: false,
             swipeAnswer: newSwipeAnswer,
-            card: userPlayCard,
+            userPlayCard,
           },
           HttpStatus.OK,
-          'Answer submitted successfully.',
+          `Answer submitted, but no metadata needed since it is incorrect.`,
         );
-      } catch (error) {
-        console.error(error);
+      }
+
+      userPlayCard = await this.playerCardService.updateCardById(
+        {
+          userId: userMongoId,
+        },
+        {
+          totalPoints: userPlayCard.totalPoints + 500,
+          swipePoints: userPlayCard.swipePoints + 500,
+          xp: userPlayCard.xp + 10,
+        },
+      );
+
+      if (!newSwipeAnswer) {
         throw new HttpException(
-          error || error.message,
+          'Failed to submit answer',
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
+
+      return ResponseHelper.CreateResponse(
+        {
+          isCorrect,
+          swipeAnswer: newSwipeAnswer,
+          card: userPlayCard,
+        },
+        HttpStatus.OK,
+        'Answer submitted successfully.',
+      );
     });
   }
 }
