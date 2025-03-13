@@ -124,7 +124,7 @@ export class AuthController {
       this.sendgridService.verifyEmail(user, token);
 
       return ResponseHelper.CreateResponse(
-        { user, userPlayCard },
+        { user, card: userPlayCard },
         HttpStatus.CREATED,
         USER_SIGNUP_SUCCESS,
       );
