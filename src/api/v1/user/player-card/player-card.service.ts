@@ -32,7 +32,13 @@ export class PlayerCardService {
     });
   }
 
-  async updateCardById(
+  async updateCardByUserId(userId: Types.ObjectId, data: any): Promise<any> {
+    return await this.playerCardModel
+      .findOneAndUpdate({ userId }, data, { new: true })
+      .exec();
+  }
+
+  async updateCardByFilter(
     filter: FilterQuery<any>,
     data: UpdateQuery<any>,
   ): Promise<any> {

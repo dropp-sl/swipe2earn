@@ -141,17 +141,15 @@ export class SwipeAnswersController {
           {
             isCorrect: false,
             swipeAnswer: newSwipeAnswer,
-            userPlayCard,
+            card: userPlayCard,
           },
           HttpStatus.OK,
           `Answer submitted, but no metadata needed since it is incorrect.`,
         );
       }
 
-      userPlayCard = await this.playerCardService.updateCardById(
-        {
-          userId: userMongoId,
-        },
+      userPlayCard = await this.playerCardService.updateCardByUserId(
+        userMongoId,
         {
           totalPoints: userPlayCard.totalPoints + 500,
           swipePoints: userPlayCard.swipePoints + 500,

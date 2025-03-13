@@ -89,21 +89,21 @@ export class AuthController {
   @Post('register')
   async register(@Body() registerUserDto: RegisterDto) {
     return await handleErrorException(async () => {
-      const emailExists = await this.userService.findByEmail(
+      const emailExists: IUser = await this.userService.findByEmail(
         registerUserDto.email,
       );
 
-      if (emailExists)
+      if (emailExists?._id)
         throw new HttpException(
           USER_ALREADY_EXIST_WITH_EMAIL,
           HttpStatus.BAD_REQUEST,
         );
 
-      const usernameExists = await this.userService.findByUsername(
+      const usernameExists: IUser = await this.userService.findByUsername(
         registerUserDto.username,
       );
 
-      if (usernameExists)
+      if (usernameExists?._id)
         throw new HttpException(USERNAME_ALREADY_TAKEN, HttpStatus.BAD_REQUEST);
 
       const salt = await bcrypt.genSalt(10);
